@@ -21,7 +21,8 @@ incoming_lanes = junction_object.attrib['incLanes']
 traci.start(["sumo-gui", "-d", "250", "-n", network_path, "-r", demand_path])
 
 traci.junction.subscribeContext(junctionID, tc.CMD_GET_VEHICLE_VARIABLE, 25, \
-    [tc.VAR_ROAD_ID, tc.VAR_LANE_INDEX, tc.VAR_LANE_ID, tc.VAR_LANEPOSITION, tc.VAR_SPEED])
+    [tc.VAR_ROAD_ID, tc.VAR_LANE_INDEX, tc.VAR_LANE_ID, tc.VAR_LANEPOSITION, \
+        tc.VAR_SPEED])
 
 step = 1
 
@@ -36,9 +37,18 @@ class Vehicle:
         self.id = id
         self.state = VehicleState.APROACHING
         self.speed = 0
+        self.lanePosition = 0
         self.waitingCounter = 0
 
+    def getLeader(self):
+        return traci.vehicle.getLeader(self.id)
+
+    def setSpeed(self, speed):
+        traci.vehicle.setSpeed(self.id, speed)
+
     def setState(self, state):
+        if state == VehicleState.WAITING:
+            print(f"{self.id} is now waiting")
         self.state = state
 
 class VehicleManager(traci.StepListener):
@@ -56,10 +66,12 @@ class VehicleManager(traci.StepListener):
             print(f"Adding {vehicleID}")
             self.vehicles[vehicleID] = Vehicle(vehicleID)
 
-        vehicles = traci.junction.getContextSubscriptionResults(junctionID)
+        # Update values of current vehicles
+        vehicles = traci.junction.getContextSubscriptionResults(self.junctionID)
         for vehicleID in vehicles:
             vehicle = self.vehicles[vehicleID]
             vehicle.speed = vehicles[vehicleID][tc.VAR_SPEED]
+            vehicle.lanePosition = vehicles[vehicleID][tc.VAR_LANEPOSITION]
 
         # Deregister arrived vehicles
         arrived = traci.simulation.getArrivedIDList()
@@ -74,19 +86,20 @@ traci.addStepListener(vehicleManager)
 
 def handleVehicle(vehicle):
     if vehicle.state == VehicleState.APROACHING:
-        if vehicle.speed < 0.8 and traci.vehicle.getLeader(vehicle.id) == None:
-            """ Hold vehicle if it stopped at the junction """
-            traci.vehicle.setSpeed(vehicle.id, 0)
+        # TODO(mpdr): this is a hard coded value, will want to replace for a dynamically calculated one
+        if vehicle.speed < 0.8 and vehicle.getLeader() == None and vehicle.lanePosition > 41:
+            """ Hold vehicle when it stops at the junction """
+            vehicle.setSpeed(0)
             vehicle.setState(VehicleState.WAITING)
 
     elif vehicle.state == VehicleState.WAITING:
-        """ Hold vehicle for 20 ticks, then set its speed again """
+        """ Hold vehicle for 20 ticks, then let it go """
         if vehicle.waitingCounter > 20:
-            traci.vehicle.setSpeed(vehicle.id, 10)
+            vehicle.setSpeed(10)
             vehicle.waitinCounter = 0
-            vehicle.setState(VehicleState.LEAVING)
+            vehicle.setState(VehicleState.CROSSING)
         else:
-            traci.vehicle.setSpeed(vehicle.id, 0)
+            vehicle.setSpeed(0)
             vehicle.waitingCounter += 1
 
 while traci.simulation.getMinExpectedNumber() > 0:
