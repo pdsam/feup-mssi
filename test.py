@@ -7,6 +7,7 @@ import easygraphics as eg
 from vehicles import *
 from junction import *
 from graphics import createRenderFunction
+from logger import Logger
 
 dir = os.path.dirname(__file__)
 
@@ -23,9 +24,9 @@ incoming_lanes = junction_object.attrib['incLanes']
 traci.start(["sumo-gui", "-d", "250", "-n", network_path, "-r", demand_path])
 junctionOfInterest = Junction(junctionID)
 
-traci.junction.subscribeContext(junctionID, tc.CMD_GET_VEHICLE_VARIABLE, 25, \
+traci.junction.subscribeContext(junctionID, tc.CMD_GET_VEHICLE_VARIABLE, 50, \
     [tc.VAR_ROAD_ID, tc.VAR_LANE_INDEX, tc.VAR_LANE_ID, tc.VAR_LANEPOSITION, \
-        tc.VAR_SPEED])
+        tc.VAR_SPEED, tc.VAR_SHAPE])
 
 vehicleManager = vehicles.VehicleManager(junctionID)
 traci.addStepListener(vehicleManager)
@@ -41,6 +42,7 @@ def handleVehicle(vehicle):
             """ Hold vehicle when it stops at the junction """
             vehicle.setSpeed(0)
             vehicle.setState(VehicleState.WAITING)
+            Logger.log(f"{vehicle.id} is now waiting")
 
     elif vehicle.state == VehicleState.WAITING:
         """ Hold vehicle for 20 ticks, then let it go """
@@ -53,10 +55,8 @@ def handleVehicle(vehicle):
             vehicle.waitingCounter += 1
 
 def runSimulation():
-    step = 1
     while traci.simulation.getMinExpectedNumber() > 0:
-        print("step", step)
-
+        Logger.incrementStep()
         traci.simulationStep()
 
         vehicles = traci.junction.getContextSubscriptionResults(junctionID)
@@ -64,8 +64,6 @@ def runSimulation():
             vehicle = vehicleManager.getVehicle(vehicleID)
             handleVehicle(vehicle)
             
-
-        step += 1
 
 runSimulation()
 
