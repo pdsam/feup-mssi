@@ -24,34 +24,57 @@ incoming_lanes = junction_object.attrib['incLanes']
 traci.start(["sumo-gui", "-d", "250", "-n", network_path, "-r", demand_path])
 junctionOfInterest = Junction(junctionID)
 
-traci.junction.subscribeContext(junctionID, tc.CMD_GET_VEHICLE_VARIABLE, 50, \
-    [tc.VAR_ROAD_ID, tc.VAR_LANE_INDEX, tc.VAR_LANE_ID, tc.VAR_LANEPOSITION, \
-        tc.VAR_SPEED, tc.VAR_SHAPE])
-
 vehicleManager = vehicles.VehicleManager(junctionID)
 traci.addStepListener(vehicleManager)
 
+connection_objects = network.findall('connection')
+print(connection_objects)
+vias = {}
+for conn in connection_objects:
+    if 'via' not in conn.attrib:
+        continue
+    fromEdge = conn.attrib['from']
+    fromLane = conn.attrib['fromLane']
+    toEdge = conn.attrib['to']
+
+    id = f"{fromEdge}:::{fromLane}:::{toEdge}";
+    print(id)
+    vias[id] = conn.attrib['via']
+
+
 # Test if the grid creation code is working
-eg.easy_run(createRenderFunction(junctionOfInterest))
+# eg.easy_run(createRenderFunction(junctionOfInterest))
 
 def handleVehicle(vehicle):
     if vehicle.state == VehicleState.APROACHING:
-        # TODO(mpdr): this is a hard coded value, will want to replace for a dynamically calculated one
         laneLength = traci.lane.getLength(vehicle.currentLaneId)
         if vehicle.speed < 0.8 and vehicle.getLeader() == None and vehicle.lanePosition > laneLength - 1.5:
             """ Hold vehicle when it stops at the junction """
-            vehicle.setSpeed(0)
-            vehicle.setState(VehicleState.WAITING)
-            Logger.log(f"{vehicle.id} is now waiting")
+            vehicle.stop()
+            vehicle.setState(VehicleState.SCHEDULING)
+            # TODO(mpdr): add vehicle to junction queues?
+            Logger.log(f"{vehicle.id} is now scheduling")
+    elif vehicle.state == VehicleState.SCHEDULING:
+        """ 
+        Schedule the vehicle's crossing, steps:
+            - find destination lane
+            - get via lane and respective shape
+            - emulate vehicle over path
+            - resolve conflicts
+        """
+        vehicle.goTime = 0 # reset schedule
+        nextHop = vehicle.getNextHop()
+        viaLane = vias[f"{vehicle.currentEdgeId}:::{vehicle.currentLaneIndex}:::{nextHop}"]
+        print(viaLane)
 
+        pass
     elif vehicle.state == VehicleState.WAITING:
         """ Hold vehicle for 20 ticks, then let it go """
         if vehicle.waitingCounter > 20:
-            vehicle.setSpeed(10)
+            vehicle.go()
             vehicle.waitinCounter = 0
             vehicle.setState(VehicleState.CROSSING)
         else:
-            vehicle.setSpeed(0)
             vehicle.waitingCounter += 1
 
 def runSimulation():
