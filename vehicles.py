@@ -79,7 +79,6 @@ class VehicleManager(traci.StepListener):
         # Update values of current vehicles
         vehicles = traci.junction.getContextSubscriptionResults(self.junctionID)
         for vehicleID in vehicles:
-            print(vehicles[vehicleID])
             self.__updateVehicle(vehicleID, vehicles[vehicleID])
 
         # Deregister arrived vehicles
