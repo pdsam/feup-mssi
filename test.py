@@ -1,80 +1,81 @@
-import traci
-import traci.constants as tc
-import os
-import xml.etree.ElementTree as ET
-import vehicles
 import easygraphics as eg
-from vehicles import *
-from junction import *
-from graphics import createRenderFunction
-from logger import Logger
+from graphics import drawRectangle
 from network import Network
+import numpy as np
 
-dir = os.path.dirname(__file__)
+fromEdgeId = '-gneE0'
+fromLaneIndex = 0
+toEdgeId = 'gneE2'
 
-network_path = os.path.join(dir, "networks/basic-test.net.xml")
-demand_path = os.path.join(dir, "networks/basic-demand.rou.xml")
+scaleDrawing = 30
 
-junctionID = "gneJ0"
+timestep = 250
+acceleration = 5
+vehicleLength = 5
+vehicleWidth = 2
 
-networkFile = ET.parse(network_path)
+def __testPathSimulation(network: Network, junction):
+    eg.init_graph(500,500)
 
-junctionNode = networkFile.find(f'junction[@id=\'{junctionID}\']')
-incomingLaneIds = junctionNode.attrib['incLanes']
+    eg.set_color(eg.Color.BLACK)
+    eg.translate(250, 250)
+    eg.scale(scaleDrawing, scaleDrawing)
 
-traci.start(["sumo-gui", "-d", "250", "-n", network_path, "-r", demand_path])
-junction = Junction(junctionID)
-network = Network(networkFile)
+    eg.begin_shape()
+    for coords in junction.shape:
+        eg.vertex(coords[0], coords[1])
+    eg.end_shape()
 
-vehicleManager = vehicles.VehicleManager(junctionID)
-traci.addStepListener(vehicleManager)
+    eg.set_fill_color(eg.Color.TRANSPARENT)
+    for row in junction.cells:
+        for cell in row:
+            drawRectangle(cell.topLeft, cell.bottomRight)
 
-# Test if the grid creation code is working
-# eg.easy_run(createRenderFunction(junctionOfInterest))
 
-def handleVehicle(vehicle):
-    if vehicle.state == VehicleState.APROACHING:
-        laneLength = traci.lane.getLength(vehicle.currentLaneId)
-        if vehicle.speed < 0.8 and vehicle.getLeader() == None and vehicle.lanePosition > laneLength - 1.5:
-            """ Hold vehicle when it stops at the junction """
-            vehicle.stop()
-            vehicle.setState(VehicleState.SCHEDULING)
-            # TODO(mpdr): add vehicle to junction queues?
-            Logger.log(f"{vehicle.id} is now scheduling")
-    elif vehicle.state == VehicleState.SCHEDULING:
-        """ 
-        Schedule the vehicle's crossing, steps:
-            - find destination lane - Done
-            - get via lane and respective shape
-            - emulate vehicle over path
-            - resolve conflicts
-        """
-        vehicle.goTime = 0 # reset schedule
-        nextHop = vehicle.getNextHop()
-        viaLane = network.getEdge(vehicle.currentEdgeId).getViaLane(vehicle.currentLaneIndex, nextHop)
+    eg.pause()
 
-        print(viaLane.id, viaLane.shape)
-    elif vehicle.state == VehicleState.WAITING:
-        """ Hold vehicle for 20 ticks, then let it go """
-        if vehicle.waitingCounter > 20:
-            vehicle.go()
-            vehicle.waitinCounter = 0
-            vehicle.setState(VehicleState.CROSSING)
-        else:
-            vehicle.waitingCounter += 1
+    viaLane = network.getEdge(fromEdgeId).getViaLane(fromLaneIndex, toEdgeId)
+    print("via", viaLane)
 
-def runSimulation():
-    while traci.simulation.getMinExpectedNumber() > 0:
-        Logger.incrementStep()
-        traci.simulationStep()
+    eg.set_color(eg.Color.BLUE)
+    eg.set_line_style(eg.LineStyle.DOT_LINE)
+    eg.set_line_width(5.0)
+    eg.begin_shape()
+    for coords in viaLane.shape:
+        eg.vertex(coords[0], coords[1])
+    eg.end_shape()
 
-        vehicles = traci.junction.getContextSubscriptionResults(junctionID)
-        for vehicleID in vehicles:
-            vehicle = vehicleManager.getVehicle(vehicleID)
-            handleVehicle(vehicle)
-            
+    eg.pause()
 
-runSimulation()
+    eg.set_color(eg.Color.DARK_MAGENTA)
+    eg.set_line_style(eg.LineStyle.SOLID_LINE)
+    eg.set_line_width(4.0)
+    speed = 0
+    distance = 0
 
-traci.close()
+    print("lane length", viaLane.length)
+    posAndRotation = viaLane.getPositionAndOrientation(distance)
 
+    while (posAndRotation is not None):
+        pos = posAndRotation[0]
+        rotation = posAndRotation[1]
+
+        eg.reset_transform()
+        eg.translate(250, 250)
+        eg.scale(scaleDrawing, scaleDrawing)
+        eg.rotate(np.degrees(-rotation), pos[0], pos[1])
+
+        print(distance)
+        eg.translate(pos[0], pos[1])
+        drawRectangle((-vehicleWidth/2, -vehicleLength/2), ((vehicleWidth/2, vehicleLength/2)))
+        speed += acceleration * (timestep / 1000)
+        distance += speed * (timestep / 1000)
+        posAndRotation = viaLane.getPositionAndOrientation(distance)
+        eg.pause()
+
+    eg.pause()
+
+    eg.close_graph()
+
+def testPathSimulation(network: Network, junction):
+    return lambda: __testPathSimulation(network, junction)

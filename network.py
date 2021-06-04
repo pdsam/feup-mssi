@@ -17,7 +17,7 @@ class Lane:
         for i in range(0, len(self.shape) - 1):
             dist = math.dist(self.shape[i], self.shape[i+1])
             self.length += dist
-            self.sections.append((dist, (self.shape[i], self.shape[i+1])))
+            self.sections.append((self.length, (self.shape[i], self.shape[i+1])))
 
     def addConnection(self, destEdgeId: str, viaLane: 'Lane'):
         self.connections[destEdgeId] = viaLane;
@@ -35,7 +35,7 @@ class Lane:
         idx = 0
         for section in self.sections:
             # look for section in which the distance is within
-            if section[0] <= distanceAlong:
+            if section[0] > distanceAlong:
                 break;
             idx += 1
         else:
@@ -49,7 +49,7 @@ class Lane:
 
         # Calulating the angle
         up = [0, 1]
-        normDirection = np.linalg.norm(direction)
+        normDirection = np.divide(direction, np.linalg.norm(direction))
         angle = np.arccos(np.dot(up, normDirection))
 
         # Calculate the position

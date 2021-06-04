@@ -1,7 +1,7 @@
 import easygraphics as eg
 import traci
 
-def drawSquare(topLeft, bottomRight):
+def drawRectangle(topLeft, bottomRight):
     eg.draw_polygon(\
         topLeft[0], topLeft[1],\
         topLeft[0], bottomRight[1],\
@@ -25,7 +25,7 @@ def drawJunctionWithGrid(junction):
     eg.set_fill_color(eg.Color.TRANSPARENT)
     for row in junction.cells:
         for cell in row:
-            drawSquare(cell.topLeft, cell.bottomRight)
+            drawRectangle(cell.topLeft, cell.bottomRight)
 
     eg.pause()
 
