@@ -8,39 +8,26 @@ from vehicles import *
 from junction import *
 from graphics import createRenderFunction
 from logger import Logger
+from network import Network
 
 dir = os.path.dirname(__file__)
 
 network_path = os.path.join(dir, "networks/basic-test.net.xml")
 demand_path = os.path.join(dir, "networks/basic-demand.rou.xml")
-#additionals = os.path.join(dir, "networks/basic_bi.add.xml")
 
 junctionID = "gneJ0"
 
-network = ET.parse(network_path)
-junction_object = network.find(f'junction[@id=\'{junctionID}\']')
-incoming_lanes = junction_object.attrib['incLanes']
+networkFile = ET.parse(network_path)
+
+junctionNode = networkFile.find(f'junction[@id=\'{junctionID}\']')
+incomingLaneIds = junctionNode.attrib['incLanes']
 
 traci.start(["sumo-gui", "-d", "250", "-n", network_path, "-r", demand_path])
-junctionOfInterest = Junction(junctionID)
+junction = Junction(junctionID)
+network = Network(networkFile)
 
 vehicleManager = vehicles.VehicleManager(junctionID)
 traci.addStepListener(vehicleManager)
-
-connection_objects = network.findall('connection')
-print(connection_objects)
-vias = {}
-for conn in connection_objects:
-    if 'via' not in conn.attrib:
-        continue
-    fromEdge = conn.attrib['from']
-    fromLane = conn.attrib['fromLane']
-    toEdge = conn.attrib['to']
-
-    id = f"{fromEdge}:::{fromLane}:::{toEdge}";
-    print(id)
-    vias[id] = conn.attrib['via']
-
 
 # Test if the grid creation code is working
 # eg.easy_run(createRenderFunction(junctionOfInterest))
@@ -57,17 +44,16 @@ def handleVehicle(vehicle):
     elif vehicle.state == VehicleState.SCHEDULING:
         """ 
         Schedule the vehicle's crossing, steps:
-            - find destination lane
+            - find destination lane - Done
             - get via lane and respective shape
             - emulate vehicle over path
             - resolve conflicts
         """
         vehicle.goTime = 0 # reset schedule
         nextHop = vehicle.getNextHop()
-        viaLane = vias[f"{vehicle.currentEdgeId}:::{vehicle.currentLaneIndex}:::{nextHop}"]
-        print(viaLane)
+        viaLane = network.getEdge(vehicle.currentEdgeId).getViaLane(vehicle.currentLaneIndex, nextHop)
 
-        pass
+        print(viaLane.id, viaLane.shape)
     elif vehicle.state == VehicleState.WAITING:
         """ Hold vehicle for 20 ticks, then let it go """
         if vehicle.waitingCounter > 20:
