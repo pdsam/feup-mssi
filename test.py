@@ -1,7 +1,9 @@
 import easygraphics as eg
 from graphics import drawRectangle
 from network import Network
+from junction import Junction
 import numpy as np
+import collision as cl
 
 fromEdgeId = '-gneE0'
 fromLaneIndex = 0
@@ -14,12 +16,11 @@ acceleration = 5
 vehicleLength = 5
 vehicleWidth = 2
 
-def __testPathSimulation(network: Network, junction):
-    eg.init_graph(500,500)
-
+def drawJunctionWithGrid(junction: Junction):
     eg.set_color(eg.Color.BLACK)
-    eg.translate(250, 250)
-    eg.scale(scaleDrawing, scaleDrawing)
+    eg.set_fill_color(eg.Color.WHITE)
+    eg.set_line_style(eg.LineStyle.SOLID_LINE)
+    eg.set_line_width(1.0)
 
     eg.begin_shape()
     for coords in junction.shape:
@@ -27,29 +28,37 @@ def __testPathSimulation(network: Network, junction):
     eg.end_shape()
 
     eg.set_fill_color(eg.Color.TRANSPARENT)
-    for row in junction.cells:
-        for cell in row:
-            drawRectangle(cell.topLeft, cell.bottomRight)
+    for cell in junction.cells:
+        drawRectangle(cell.topLeft, cell.bottomRight)
 
+def drawLaneShape(shape):
+    eg.set_color(eg.Color.BLUE)
+    eg.set_fill_color(eg.Color.TRANSPARENT)
+    eg.set_line_style(eg.LineStyle.DOT_LINE)
+    eg.set_line_width(5.0)
+
+    eg.begin_shape()
+    for coords in shape:
+        eg.vertex(coords[0], coords[1])
+    eg.end_shape()
+
+
+def __testPathSimulation(network: Network, junction: Junction):
+    eg.init_graph(500,500)
+
+    eg.translate(250, 250)
+    eg.scale(scaleDrawing, scaleDrawing)
+
+    drawJunctionWithGrid(junction)
 
     eg.pause()
 
     viaLane = network.getEdge(fromEdgeId).getViaLane(fromLaneIndex, toEdgeId)
-    print("via", viaLane)
 
-    eg.set_color(eg.Color.BLUE)
-    eg.set_line_style(eg.LineStyle.DOT_LINE)
-    eg.set_line_width(5.0)
-    eg.begin_shape()
-    for coords in viaLane.shape:
-        eg.vertex(coords[0], coords[1])
-    eg.end_shape()
+    drawLaneShape(viaLane.shape)
 
     eg.pause()
 
-    eg.set_color(eg.Color.DARK_MAGENTA)
-    eg.set_line_style(eg.LineStyle.SOLID_LINE)
-    eg.set_line_width(4.0)
     speed = 0
     distance = 0
 
@@ -57,13 +66,42 @@ def __testPathSimulation(network: Network, junction):
     posAndRotation = viaLane.getPositionAndOrientation(distance)
 
     while (posAndRotation is not None):
-        pos = posAndRotation[0]
-        rotation = posAndRotation[1]
+        eg.set_background_color(eg.Color.WHITE)
+        eg.clear()
 
         eg.reset_transform()
         eg.translate(250, 250)
         eg.scale(scaleDrawing, scaleDrawing)
+
+        drawJunctionWithGrid(junction)
+
+        pos = posAndRotation[0]
+        rotation = posAndRotation[1]
+
+        vehicleBox = cl.Poly.from_box(pos, vehicleWidth, vehicleLength)
+        vehicleBox.angle = -rotation
+        collidingCells = []
+        for cell in junction.cells:
+            if cl.test_poly_poly(vehicleBox, cell.boundingBox):
+                collidingCells.append(cell)
+
+        # Draw colliding cells
+        eg.set_color(eg.Color.BLACK)
+        eg.set_fill_color(eg.Color.LIGHT_GREEN)
+        eg.set_line_style(eg.LineStyle.SOLID_LINE)
+        eg.set_line_width(1.0)
+        for cell in collidingCells:
+            drawRectangle(cell.topLeft, cell.bottomRight)
+
+        drawLaneShape(viaLane.shape)
+
+        # Draw vehicle
         eg.rotate(np.degrees(-rotation), pos[0], pos[1])
+
+        eg.set_color(eg.Color.DARK_MAGENTA)
+        eg.set_fill_color(eg.Color.TRANSPARENT)
+        eg.set_line_style(eg.LineStyle.SOLID_LINE)
+        eg.set_line_width(4.0)
 
         print(distance)
         eg.translate(pos[0], pos[1])
