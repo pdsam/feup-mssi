@@ -16,7 +16,7 @@ from pathSimulator import PathSimulator
 dir = os.path.dirname(__file__)
 
 network_path = os.path.join(dir, "networks/basic/network.net.xml")
-demand_path = os.path.join(dir, "networks/basic/demand.rou.xml")
+demand_path = os.path.join(dir, "networks/basic/demand-bench.rou.xml")
 
 junctionID = "gneJ0"
 
@@ -57,7 +57,8 @@ def handleVehicle(vehicle: Vehicle):
 
         viaLane = network.getEdge(vehicle.currentEdgeId).getViaLane(vehicle.currentLaneIndex, nextHop)
 
-        sim = PathSimulator(junction, vehicle, viaLane, simulationStepLength, simulationTime)
+        startTime = simulationTime + simulationStepLength
+        sim = PathSimulator(junction, vehicle, viaLane, simulationStepLength, startTime)
 
         reservations: dict[str, Reservation] = {}
 
