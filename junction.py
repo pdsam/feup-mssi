@@ -73,7 +73,7 @@ class Junction:
         for schedule in self.schedules.values():
             schedule.clearVehicleReservations(vehicleId)
 
-    def __setupGrid(self, numCells: int = 20) -> list[Coordinates]:
+    def __setupGrid(self, numCells: int = 20) -> list[JunctionCell]:
         left = sys.float_info.max
         right = sys.float_info.min
         down = sys.float_info.max
