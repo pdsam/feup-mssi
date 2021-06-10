@@ -16,7 +16,7 @@ from pathSimulator import PathSimulator
 dir = os.path.dirname(__file__)
 
 network_path = os.path.join(dir, "networks/basic/network.net.xml")
-demand_path = os.path.join(dir, "networks/basic/demand-3.rou.xml")
+demand_path = os.path.join(dir, "networks/basic/demand.rou.xml")
 
 junctionID = "gneJ0"
 
@@ -93,15 +93,26 @@ def handleVehicle(vehicle: Vehicle):
 
         # Assign departure time to vehicle
         vehicle.goTime = goTime
+        vehicle.viaLaneId = viaLane.id
         # Set vehicle to waitin
-        vehicle.state = VehicleState.WAITING
+        vehicle.setState(VehicleState.WAITING)
 
         #visualizePathSimulation(network, junction, viaLane, vehicle, timeStep)
 
     elif vehicle.state == VehicleState.WAITING:
         if vehicle.goTime >= simulationTime:
             vehicle.go()
-            vehicle.state = VehicleState.CROSSING
+            vehicle.setState(VehicleState.START_CROSSING)
+    elif vehicle.state == VehicleState.START_CROSSING:
+        if vehicle.currentLaneId == vehicle.viaLaneId:
+            vehicle.setState(VehicleState.CROSSING)
+        pass
+    elif vehicle.state == VehicleState.CROSSING:
+        if vehicle.currentLaneId != vehicle.viaLaneId:
+            junction.notifyLeaving(vehicle.id)
+            vehicle.setState(VehicleState.LEAVING)
+        pass
+
 
 def runSimulation():
     #eg.init_graph(500,500)

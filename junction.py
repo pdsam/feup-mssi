@@ -24,6 +24,10 @@ class Schedule:
 
         return True
 
+    def clearVehicleReservations(self, vehicleId: str):
+        if vehicleId in self.reservations:
+            del self.reservations[vehicleId]
+
     def addReservation(self, toAdd: Reservation):
         self.reservations[toAdd.vehicleId] = toAdd
 
@@ -64,6 +68,10 @@ class Junction:
             schedule.addReservation(reservation)
 
         return True
+
+    def notifyLeaving(self, vehicleId: str):
+        for schedule in self.schedules.values():
+            schedule.clearVehicleReservations(vehicleId)
 
     def __setupGrid(self, numCells: int = 20) -> list[Coordinates]:
         left = sys.float_info.max

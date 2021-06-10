@@ -9,12 +9,14 @@ class VehicleState(Enum):
     CROSSING = 3
     LEAVING = 4
     SCHEDULING = 5
+    START_CROSSING = 6
 
 class Vehicle:
     def __init__(self, id):
         self.id = id
         self.state = VehicleState.APROACHING
         self.goTime = 0
+        self.viaLaneId = None
         self.speed = 0
         self.lanePosition = 0
         self.currentLaneId = None
