@@ -3,6 +3,7 @@ from typing import Tuple
 import traci
 import math
 import numpy as np
+from simTypes import PosAndRotation
 
 class Lane:
     def __init__(self, laneNode):
@@ -25,7 +26,7 @@ class Lane:
     def getViaLane(self, destEdgeId: str) -> 'Lane':
         return self.connections[destEdgeId]
 
-    def getPositionAndOrientation(self, distanceAlong: float) -> Tuple[Tuple[float, float], float]:
+    def getPositionAndOrientation(self, distanceAlong: float) -> PosAndRotation:
         if distanceAlong < 0:
             return None
 

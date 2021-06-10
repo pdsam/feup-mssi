@@ -1,5 +1,5 @@
 import easygraphics as eg
-from graphics import drawRectangle
+from graphics import drawRectangle, drawJunctionWithGrid, drawLaneShape
 from network import Network
 from junction import Junction
 import numpy as np
@@ -15,33 +15,6 @@ timestep = 250
 acceleration = 5
 vehicleLength = 5
 vehicleWidth = 2
-
-def drawJunctionWithGrid(junction: Junction):
-    eg.set_color(eg.Color.BLACK)
-    eg.set_fill_color(eg.Color.WHITE)
-    eg.set_line_style(eg.LineStyle.SOLID_LINE)
-    eg.set_line_width(1.0)
-
-    eg.begin_shape()
-    for coords in junction.shape:
-        eg.vertex(coords[0], coords[1])
-    eg.end_shape()
-
-    eg.set_fill_color(eg.Color.TRANSPARENT)
-    for cell in junction.cells:
-        drawRectangle(cell.topLeft, cell.bottomRight)
-
-def drawLaneShape(shape):
-    eg.set_color(eg.Color.BLUE)
-    eg.set_fill_color(eg.Color.TRANSPARENT)
-    eg.set_line_style(eg.LineStyle.DOT_LINE)
-    eg.set_line_width(5.0)
-
-    eg.begin_shape()
-    for coords in shape:
-        eg.vertex(coords[0], coords[1])
-    eg.end_shape()
-
 
 def __testPathSimulation(network: Network, junction: Junction):
     eg.init_graph(500,500)
@@ -103,7 +76,6 @@ def __testPathSimulation(network: Network, junction: Junction):
         eg.set_line_style(eg.LineStyle.SOLID_LINE)
         eg.set_line_width(4.0)
 
-        print(distance)
         eg.translate(pos[0], pos[1])
         drawRectangle((-vehicleWidth/2, -vehicleLength/2), ((vehicleWidth/2, vehicleLength/2)))
         speed += acceleration * (timestep / 1000)

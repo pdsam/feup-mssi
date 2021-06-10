@@ -1,5 +1,6 @@
 import easygraphics as eg
 import traci
+from junction import Junction
 
 def drawRectangle(topLeft, bottomRight):
     eg.draw_polygon(\
@@ -9,13 +10,11 @@ def drawRectangle(topLeft, bottomRight):
         bottomRight[0], topLeft[1]\
     )
 
-scaleGraph = 30
-def drawJunctionWithGrid(junction):
-    eg.init_graph(500,500)
-
+def drawJunctionWithGrid(junction: Junction):
     eg.set_color(eg.Color.BLACK)
-    eg.translate(250, 250)
-    eg.scale(scaleGraph, scaleGraph)
+    eg.set_fill_color(eg.Color.WHITE)
+    eg.set_line_style(eg.LineStyle.SOLID_LINE)
+    eg.set_line_width(1.0)
 
     eg.begin_shape()
     for coords in junction.shape:
@@ -23,13 +22,17 @@ def drawJunctionWithGrid(junction):
     eg.end_shape()
 
     eg.set_fill_color(eg.Color.TRANSPARENT)
-    for row in junction.cells:
-        for cell in row:
-            drawRectangle(cell.topLeft, cell.bottomRight)
+    for cell in junction.cells:
+        drawRectangle(cell.topLeft, cell.bottomRight)
 
-    eg.pause()
+def drawLaneShape(shape):
+    eg.set_color(eg.Color.BLUE)
+    eg.set_fill_color(eg.Color.TRANSPARENT)
+    eg.set_line_style(eg.LineStyle.DOT_LINE)
+    eg.set_line_width(5.0)
 
-    eg.close_graph()
+    eg.begin_shape()
+    for coords in shape:
+        eg.vertex(coords[0], coords[1])
+    eg.end_shape()
 
-def createRenderFunction(junction):
-    return lambda: drawJunctionWithGrid(junction)

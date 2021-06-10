@@ -21,6 +21,9 @@ class Vehicle:
         self.currentLaneIndex = None
         self.currentEdgeId = None
         self.waitingCounter = 0
+        self.width = traci.vehicle.getWidth(id)
+        self.length = traci.vehicle.getLength(id)
+        self.acceleration = traci.vehicle.getAccel(id)
 
     def getLeader(self):
         return traci.vehicle.getLeader(self.id)

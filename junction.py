@@ -3,8 +3,29 @@ import traci
 import typing
 from typing import Tuple
 import collision
+from simTypes import Coordinates
 
-Coordinates = Tuple[float, float]
+class Reservation:
+    def __init__(self, timeStart: float, timeEnd: float, vehicleId: str):
+        self.timeStart: float = timeStart
+        self.timeEnd: float = timeEnd
+        self.vehicleId: str = vehicleId
+
+class Schedule:
+    def __init__(self, cellId: str):
+        self.cellId: str = cellId
+        self.reservations: dict[str, Reservation] = {}
+
+    def canAdd(self, toCheck: Reservation) -> bool:
+        for vehId, reservation in self.reservations.items():
+            overlap = toCheck.timeStart < reservation.timeEnd and toCheck.timeEnd > reservation.timeStart
+            if overlap:
+                return False
+
+        return True
+
+    def addReservation(self, toAdd: Reservation):
+        self.reservations[toAdd.vehicleId] = toAdd
 
 class JunctionCell:
     def __init__(self, id: str, topLeft: Coordinates, bottomRight: Coordinates):
@@ -27,6 +48,22 @@ class Junction:
     def __init__(self, id: str):
         self.shape: list[Coordinates] = traci.junction.getShape(id)
         self.cells: list[JunctionCell] = self.__setupGrid()
+        self.schedules: dict[str, Schedule] = {}
+
+        for cell in self.cells:
+            self.schedules[cell.id] = Schedule(cell.id)
+
+    def requestReservations(self, reservations: dict[str, Reservation]) -> bool:
+        for cellId, reservation in reservations.items():
+            schedule = self.schedules[cellId]
+            if not schedule.canAdd(reservation):
+                return False
+        
+        for cellId, reservation in reservations.items():
+            schedule = self.schedules[cellId]
+            schedule.addReservation(reservation)
+
+        return True
 
     def __setupGrid(self, numCells: int = 20) -> list[Coordinates]:
         left = sys.float_info.max
