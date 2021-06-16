@@ -11,6 +11,12 @@ class VehicleState(Enum):
     LEAVING = 4
     SCHEDULING = 5
     START_CROSSING = 6
+    IN_QUEUE = 7
+
+class PlatoonState(Enum):
+    LEADER = 1
+    FOLLOWER = 2
+    INDEPENDENT = 3
 
 class Vehicle:
     def __init__(self, id):

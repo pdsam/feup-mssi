@@ -37,14 +37,20 @@ Logger.setActive(True)
 
 simulationTime = 0
 def handleVehicle(vehicle: Vehicle):
-    if vehicle.state == VehicleState.APROACHING:
+    if vehicle.state == VehicleState.APROACHING or vehicle.state == VehicleState.IN_QUEUE:
         laneLength = traci.lane.getLength(vehicle.currentLaneId)
-        if vehicle.speed < 0.8 and vehicle.getLeader() == None and vehicle.lanePosition > laneLength - 1.5:
-            """ Hold vehicle when it stops at the junction """
-            vehicle.stop()
-            vehicle.setState(VehicleState.SCHEDULING)
-            # TODO(mpdr): add vehicle to junction queues?
-            Logger.log(f"{vehicle.id} is now scheduling")
+        if vehicle.speed < 0.8:
+            if vehicle.getLeader() == None and vehicle.lanePosition > laneLength - 1.5:
+                """ Hold vehicle when it stops at the junction """
+                vehicle.stop()
+                vehicle.setState(VehicleState.SCHEDULING)
+                # TODO(mpdr): add vehicle to junction queues?
+                Logger.log(f"{vehicle.id} is now scheduling")
+            else:
+                vehicle.setState(VehicleState.IN_QUEUE)
+                junction.notifyEnteredQueue(vehicle)
+                Logger.log(f"{vehicle.id} is now in queue")
+
     elif vehicle.state == VehicleState.SCHEDULING:
         """ 
         Schedule the vehicle's crossing, steps:

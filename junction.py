@@ -4,6 +4,7 @@ import typing
 from typing import Tuple
 import collision
 from simTypes import Coordinates
+from enum import Enum
 
 class Reservation:
     def __init__(self, timeStart: float, timeEnd: float, vehicleId: str):
@@ -48,14 +49,29 @@ class JunctionCell:
             topLeft[1] - bottomRight[1]
         )
 
+class PlatoonStrategy(Enum):
+    NONE = 1
+    NEXT_SAME_DIRECTION = 2
+
 class Junction:
     def __init__(self, id: str):
         self.shape: list[Coordinates] = traci.junction.getShape(id)
         self.cells: list[JunctionCell] = self.__setupGrid()
         self.schedules: dict[str, Schedule] = {}
+        self.platoonStrategy: PlatoonStrategy = PlatoonStrategy.NONE
 
         for cell in self.cells:
             self.schedules[cell.id] = Schedule(cell.id)
+
+    def setPlattonStrategy(self, strategy: str):
+        self.platoonStrategy = strategy
+
+    def notifyEnteredQueue(self, vehicle: Vehicle):
+        if self.platoonStrategy is PlatoonStrategy.NONE:
+            return
+        elif self.platoonStrategy == PlatoonStrategy.NEXT_SAME_DIRECTION:
+            # TODO(mpdr): this as well
+            return
 
     def requestReservations(self, reservations: dict[str, Reservation]) -> bool:
         for cellId, reservation in reservations.items():
