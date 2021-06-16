@@ -15,17 +15,16 @@ from pathSimulator import PathSimulator
 
 dir = os.path.dirname(__file__)
 
-network_path = os.path.join(dir, "networks/4lanes/network.net.xml")
-demand_path = os.path.join(dir, "networks/4lanes/demand-bench.rou.xml")
+network_path = os.path.join(dir, "networks/basic/network.net.xml")
+demand_path = os.path.join(dir, "networks/basic/demand-bench.rou.xml")
 
 junctionID = "gneJ0"
 
 networkFile = ET.parse(network_path)
 
 junctionNode = networkFile.find(f'junction[@id=\'{junctionID}\']')
-incomingLaneIds = junctionNode.attrib['incLanes']
 
-traci.start(["sumo", "--step-length", "0.250", "-d", "0", "-n", network_path, "-r", demand_path])
+traci.start(["sumo-gui", "--step-length", "0.250", "-d", "0", "-n", network_path, "-r", demand_path])
 simulationStepLength = traci.simulation.getDeltaT()
 print(f"Timestep = {simulationStepLength}")
 junction = Junction(junctionID)
@@ -33,6 +32,8 @@ network = Network(networkFile)
 
 vehicleManager = vehicles.VehicleManager(junctionID)
 traci.addStepListener(vehicleManager)
+
+Logger.setActive(True)
 
 simulationTime = 0
 def handleVehicle(vehicle: Vehicle):
@@ -118,10 +119,11 @@ def handleVehicle(vehicle: Vehicle):
 def runSimulation():
     #eg.init_graph(500,500)
     simulationTime = traci.simulation.getTime()
-    step = 0
-    while step < 500:
+    Logger.resetStep()
+
+    while Logger.step < 500:
+        print("Step", Logger.step, end='\r')
         simulationTime = traci.simulation.getTime()
-        Logger.incrementStep()
         traci.simulationStep()
 
         vehicles = traci.junction.getContextSubscriptionResults(junctionID)
@@ -129,7 +131,7 @@ def runSimulation():
             vehicle = vehicleManager.getVehicle(vehicleID)
             handleVehicle(vehicle)
 
-        step += 1
+        Logger.incrementStep()
             
 
 #eg.easy_run(testPathSimulation(network, junction))
@@ -137,6 +139,8 @@ def runSimulation():
 #eg.easy_run(runSimulation)
 runSimulation()
 
+print("Vehicles left", traci.simulation.getMinExpectedNumber())
+print("Vehicles arrived", vehicleManager.arrived)
 
 traci.close()
 

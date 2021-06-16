@@ -2,6 +2,7 @@ import traci
 import traci.constants as tc
 from enum import Enum
 from logger import Logger
+import typing
 
 class VehicleState(Enum):
     APROACHING = 1
@@ -13,19 +14,19 @@ class VehicleState(Enum):
 
 class Vehicle:
     def __init__(self, id):
-        self.id = id
-        self.state = VehicleState.APROACHING
-        self.goTime = 0
-        self.viaLaneId = None
-        self.speed = 0
-        self.lanePosition = 0
-        self.currentLaneId = None
-        self.currentLaneIndex = None
-        self.currentEdgeId = None
-        self.waitingCounter = 0
-        self.width = traci.vehicle.getWidth(id)
-        self.length = traci.vehicle.getLength(id)
-        self.acceleration = traci.vehicle.getAccel(id)
+        self.id: str = id
+        self.state: VehicleState = VehicleState.APROACHING
+        self.platoonState: PlatoonState = PlatoonState.INDEPENDENT
+        self.goTime: float = 0
+        self.viaLaneId: str = None
+        self.speed: float = 0
+        self.lanePosition: float = 0
+        self.currentLaneId: str = None
+        self.currentLaneIndex: int = None
+        self.currentEdgeId: str = None
+        self.width: float = traci.vehicle.getWidth(id)
+        self.length: float = traci.vehicle.getLength(id)
+        self.acceleration: float = traci.vehicle.getAccel(id)
 
     def getLeader(self):
         return traci.vehicle.getLeader(self.id)
@@ -48,8 +49,9 @@ class Vehicle:
 
 class VehicleManager(traci.StepListener):
     def __init__(self, junctionID):
-        self.vehicles = dict()
-        self.junctionID = junctionID
+        self.vehicles: dict[str: Vehicle] = dict()
+        self.junctionID: str = junctionID
+        self.arrived: int = 0
 
         traci.junction.subscribeContext(junctionID, \
             tc.CMD_GET_VEHICLE_VARIABLE, 50, \
@@ -62,7 +64,7 @@ class VehicleManager(traci.StepListener):
             ])
 
 
-    def getVehicle(self, id):
+    def getVehicle(self, id: str) -> Vehicle:
         return self.vehicles[id]
 
     def __updateVehicle(self, vehicleId, data):
@@ -88,6 +90,7 @@ class VehicleManager(traci.StepListener):
 
         # Deregister arrived vehicles
         arrived = traci.simulation.getArrivedIDList()
+        self.arrived += len(arrived)
         for vehicleID in arrived:
             Logger.log(f"Removing {vehicleID}")
             self.vehicles.pop(vehicleID)

@@ -1,6 +1,10 @@
 class Logger:
     step = 0
     firstLog = True
+    active = True
+
+    def setActive(active):
+        Logger.active = active
     
     def resetStep():
         Logger.step = 0
@@ -11,6 +15,9 @@ class Logger:
         Logger.firstLog = True
     
     def log(message):
+        if not Logger.active:
+            return
+
         if Logger.firstLog:
             print(f"\nstep {Logger.step}:")
             Logger.firstLog = False
