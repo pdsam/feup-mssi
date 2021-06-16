@@ -16,7 +16,6 @@ class Vehicle:
     def __init__(self, id):
         self.id: str = id
         self.state: VehicleState = VehicleState.APROACHING
-        self.platoonState: PlatoonState = PlatoonState.INDEPENDENT
         self.goTime: float = 0
         self.viaLaneId: str = None
         self.speed: float = 0

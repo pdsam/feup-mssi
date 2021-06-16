@@ -12,11 +12,15 @@ from network import Network
 from test import testPathSimulation
 from visualizer import visualizePathSimulation
 from pathSimulator import PathSimulator
+from datetime import datetime
 
 dir = os.path.dirname(__file__)
 
-network_path = os.path.join(dir, "networks/basic/network.net.xml")
-demand_path = os.path.join(dir, "networks/basic/demand-bench.rou.xml")
+networkName = 'basic'
+demandVersion = '-bench'
+
+network_path = os.path.join(dir, f"networks/{networkName}/network.net.xml")
+demand_path = os.path.join(dir, f"networks/{networkName}/demand{demandVersion}.rou.xml")
 
 junctionID = "gneJ0"
 
@@ -24,7 +28,7 @@ networkFile = ET.parse(network_path)
 
 junctionNode = networkFile.find(f'junction[@id=\'{junctionID}\']')
 
-traci.start(["sumo-gui", "--step-length", "0.250", "-d", "0", "-n", network_path, "-r", demand_path])
+traci.start(["sumo", "--step-length", "0.250", "-d", "0", "-n", network_path, "-r", demand_path])
 simulationStepLength = traci.simulation.getDeltaT()
 print(f"Timestep = {simulationStepLength}")
 junction = Junction(junctionID)
@@ -137,10 +141,14 @@ def runSimulation():
 #eg.easy_run(testPathSimulation(network, junction))
 
 #eg.easy_run(runSimulation)
+timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+resultsFileName = f"results-{networkName}{demandVersion}-{timestamp}.txt"
+resultsFile = open(resultsFileName, "x")
+
 runSimulation()
 
-print("Vehicles left", traci.simulation.getMinExpectedNumber())
-print("Vehicles arrived", vehicleManager.arrived)
+resultsFile.write(f"Vehicles left: {traci.simulation.getMinExpectedNumber()}\n")
+resultsFile.write(f"Vehicles arrived: {vehicleManager.arrived}\n")
 
 traci.close()
 
