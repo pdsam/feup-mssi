@@ -140,7 +140,7 @@ def runSimulation():
     print(f"Running {maximumSteps} steps.")
 
     while Logger.step < maximumSteps:
-        print("Step", Logger.step, end='\r')
+        print(f"Step {Logger.step}. T = {simulationTime}s", end='\r')
         simulationTime = traci.simulation.getTime()
         traci.simulationStep()
 
@@ -168,6 +168,7 @@ else:
 
 resultsFileName = f"results/results-{networkName}{demandVersion}-{timestamp}.txt"
 resultsFile = open(resultsFileName, "x")
+resultsFile.write(f"{networkName} - {demandVersion}")
 
 runSimulation()
 

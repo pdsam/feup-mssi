@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Thu 10 Jun 2021 10:41:42 PM WEST by Eclipse SUMO netedit Version 1.8.0
+<!-- generated on Thu 17 Jun 2021 11:48:09 PM WEST by Eclipse SUMO netedit Version 1.8.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
@@ -41,16 +41,20 @@
 -->
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
-    <flow id="flow_0" begin="0.00" from="-gneE0" to="gneE2" end="3600.00" number="1800"/>
-    <flow id="flow_1" begin="0.00" from="-gneE0" to="gneE1" end="3600.00" number="1800"/>
-    <flow id="flow_10" begin="0.00" from="-gneE2" to="gneE3" end="3600.00" number="1800"/>
-    <flow id="flow_11" begin="0.00" from="-gneE2" to="gneE0" end="3600.00" number="1800"/>
-    <flow id="flow_2" begin="0.00" from="-gneE0" to="gneE3" end="3600.00" number="1800"/>
-    <flow id="flow_3" begin="0.00" from="-gneE3" to="gneE0" end="3600.00" number="1800"/>
-    <flow id="flow_4" begin="0.00" from="-gneE3" to="gneE2" end="3600.00" number="1800"/>
-    <flow id="flow_5" begin="0.00" from="-gneE3" to="gneE1" end="3600.00" number="1800"/>
-    <flow id="flow_6" begin="0.00" from="-gneE1" to="gneE3" end="3600.00" number="1800"/>
-    <flow id="flow_7" begin="0.00" from="-gneE1" to="gneE0" end="3600.00" number="1800"/>
-    <flow id="flow_8" begin="0.00" from="-gneE1" to="gneE2" end="3600.00" number="1800"/>
-    <flow id="flow_9" begin="0.00" from="-gneE2" to="gneE1" end="3600.00" number="1800"/>
+    <flow id="flow_0" begin="0.00" from="-gneE0" to="gneE1" end="3600.00" number="1800"/>
+    <flow id="flow_1" begin="0.00" from="-gneE0" to="gneE3" end="3600.00" number="1800"/>
+    <flow id="flow_10" begin="0.00" departLane="1" from="-gneE1" to="gneE0" end="3600.00" number="1800"/>
+    <flow id="flow_11" begin="0.00" departLane="1" from="-gneE1" to="gneE3" end="3600.00" number="1800"/>
+    <flow id="flow_12" begin="0.00" departLane="1" from="-gneE3" to="gneE2" end="3600.00" number="1800"/>
+    <flow id="flow_13" begin="0.00" departLane="1" from="-gneE3" to="gneE0" end="3600.00" number="1800"/>
+    <flow id="flow_14" begin="0.00" departLane="1" from="-gneE2" to="gneE3" end="3600.00" number="1800"/>
+    <flow id="flow_15" begin="0.00" departLane="1" from="-gneE2" to="gneE1" end="3600.00" number="1800"/>
+    <flow id="flow_2" begin="0.00" from="-gneE2" to="gneE3" end="3600.00" number="1800"/>
+    <flow id="flow_3" begin="0.00" from="-gneE2" to="gneE0" end="3600.00" number="1800"/>
+    <flow id="flow_4" begin="0.00" from="-gneE1" to="gneE0" end="3600.00" number="1800"/>
+    <flow id="flow_5" begin="0.00" from="-gneE1" to="gneE2" end="3600.00" number="1800"/>
+    <flow id="flow_6" begin="0.00" from="-gneE3" to="gneE2" end="3600.00" number="1800"/>
+    <flow id="flow_7" begin="0.00" from="-gneE3" to="gneE1" end="3600.00" number="1800"/>
+    <flow id="flow_8" begin="0.00" departLane="1" from="-gneE0" to="gneE1" end="3600.00" number="1800"/>
+    <flow id="flow_9" begin="0.00" departLane="1" from="-gneE0" to="gneE2" end="3600.00" number="1800"/>
 </routes>
