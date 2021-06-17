@@ -13,11 +13,21 @@ from test import testPathSimulation
 from visualizer import visualizePathSimulation
 from pathSimulator import PathSimulator
 from datetime import datetime
+import argparse
 
 dir = os.path.dirname(__file__)
 
-networkName = 'basic'
-demandVersion = '-bench'
+argParser = argparse.ArgumentParser(description='Simulate junction management.')
+
+argParser.add_argument('-n', dest='networkName', required=True, type=str)
+argParser.add_argument('-d', dest='demandVer', required=True, type=str)
+argParser.add_argument('-t', dest='simulationDuration', required=True, type=int)
+
+args = argParser.parse_args()
+
+networkName = args.networkName
+demandVersion = '-' + args.demandVer
+simulationDuration = args.simulationDuration
 
 network_path = os.path.join(dir, f"networks/{networkName}/network.net.xml")
 demand_path = os.path.join(dir, f"networks/{networkName}/demand{demandVersion}.rou.xml")
@@ -37,7 +47,7 @@ network = Network(networkFile)
 vehicleManager = vehicles.VehicleManager(junctionID)
 traci.addStepListener(vehicleManager)
 
-Logger.setActive(True)
+Logger.setActive(False)
 
 simulationTime = 0
 def handleVehicle(vehicle: Vehicle):
@@ -125,7 +135,11 @@ def runSimulation():
     simulationTime = traci.simulation.getTime()
     Logger.resetStep()
 
-    while Logger.step < 500:
+    maximumSteps = math.ceil(simulationDuration / simulationStepLength)
+    print(f"Running for {simulationDuration} seconds with {simulationStepLength}s step length.")
+    print(f"Running {maximumSteps} steps.")
+
+    while Logger.step < maximumSteps:
         print("Step", Logger.step, end='\r')
         simulationTime = traci.simulation.getTime()
         traci.simulationStep()
@@ -142,7 +156,17 @@ def runSimulation():
 
 #eg.easy_run(runSimulation)
 timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-resultsFileName = f"results-{networkName}{demandVersion}-{timestamp}.txt"
+
+# ensure results folder exists
+if os.path.exists('results'):
+    if not os.path.isdir('results'):
+        print("Please create a folder named 'results'")
+        exit(1)
+else:
+    os.mkdir('results')
+
+
+resultsFileName = f"results/results-{networkName}{demandVersion}-{timestamp}.txt"
 resultsFile = open(resultsFileName, "x")
 
 runSimulation()
